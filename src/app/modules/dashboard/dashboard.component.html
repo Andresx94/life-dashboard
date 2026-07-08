@@ -1,0 +1,121 @@
+<div class="max-w-6xl space-y-8">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-semibold">Dashboard</h1>
+    <p class="text-sm text-[var(--color-text-muted)] mt-1">Resumen general</p>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="icon-badge bg-emerald-500/10 text-emerald-400">
+          <i class="pi pi-arrow-down text-xs"></i>
+        </div>
+        <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Ingresos</span>
+      </div>
+      <p class="text-2xl font-bold text-emerald-400">{{ formatMoney(summary.monthlyIncome) }}</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="icon-badge bg-amber-500/10 text-amber-400">
+          <i class="pi pi-clock text-xs"></i>
+        </div>
+        <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Pendiente</span>
+      </div>
+      <p class="text-2xl font-bold text-amber-400">{{ formatMoney(summary.pendingIncome) }}</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="icon-badge bg-red-500/10 text-red-400">
+          <i class="pi pi-arrow-up text-xs"></i>
+        </div>
+        <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Gastos</span>
+      </div>
+      <p class="text-2xl font-bold text-red-400">{{ formatMoney(summary.monthlyExpenses) }}</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="icon-badge bg-blue-500/10 text-blue-400">
+          <i class="pi pi-chart-line text-xs"></i>
+        </div>
+        <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Balance</span>
+      </div>
+      <p class="text-2xl font-bold" [class]="summary.balance >= 0 ? 'text-emerald-400' : 'text-red-400'">
+        {{ formatMoney(summary.balance) }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Detail sections -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Próximos pagos -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <i class="pi pi-calendar text-sm text-[var(--color-text-muted)]"></i>
+        <h3>Próximos pagos</h3>
+      </div>
+      <div class="detail-card-body">
+        @if (summary.upcomingPayments.length === 0) {
+          <div class="empty-state">
+            <i class="pi pi-check-circle text-xl text-emerald-400/50"></i>
+            <p>Sin pagos próximos</p>
+          </div>
+        }
+        @for (payment of summary.upcomingPayments; track payment.name) {
+          <div class="list-item">
+            <span class="text-sm">{{ payment.name }}</span>
+            <span class="text-sm font-medium text-amber-400">{{ formatMoney(payment.amount) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Medicamentos -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <i class="pi pi-heart text-sm text-[var(--color-text-muted)]"></i>
+        <h3>Medicamentos hoy</h3>
+      </div>
+      <div class="detail-card-body">
+        @if (summary.pendingMedications.length === 0) {
+          <div class="empty-state">
+            <i class="pi pi-check-circle text-xl text-emerald-400/50"></i>
+            <p>Todo al día</p>
+          </div>
+        }
+        @for (med of summary.pendingMedications; track med.name) {
+          <div class="list-item">
+            <span class="text-sm">{{ med.name }}</span>
+            <span class="text-xs text-[var(--color-text-muted)]">{{ med.time }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Recordatorios -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <i class="pi pi-bell text-sm text-[var(--color-text-muted)]"></i>
+        <h3>Recordatorios</h3>
+      </div>
+      <div class="detail-card-body">
+        @if (summary.upcomingReminders.length === 0) {
+          <div class="empty-state">
+            <i class="pi pi-check-circle text-xl text-emerald-400/50"></i>
+            <p>Sin recordatorios</p>
+          </div>
+        }
+        @for (rem of summary.upcomingReminders; track rem.title) {
+          <div class="list-item">
+            <span class="text-sm">{{ rem.title }}</span>
+            <span class="text-xs text-[var(--color-text-muted)]">{{ rem.date }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
