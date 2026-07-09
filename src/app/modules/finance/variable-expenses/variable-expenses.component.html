@@ -1,0 +1,87 @@
+<div class="space-y-4">
+  <div class="flex items-center justify-between">
+    <h3 class="text-sm font-medium text-[var(--color-text-muted)]">Gastos variables</h3>
+    <button (click)="showForm = !showForm" class="btn-primary">
+      <i class="pi pi-plus text-xs"></i>
+      Agregar
+    </button>
+  </div>
+
+  <!-- Monthly summary -->
+  <div class="card p-3 flex justify-between items-center">
+    <span class="text-sm text-[var(--color-text-muted)]">Total este mes</span>
+    <span class="text-lg font-bold text-red-400">{{ formatMoney(monthlyTotal) }}</span>
+  </div>
+
+  @if (showForm) {
+    <div class="card p-4 space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="label">Categoría</label>
+          <select [(ngModel)]="form.category" class="input">
+            <option value="">Seleccionar</option>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="label">Monto</label>
+          <input type="number" [(ngModel)]="form.amount" class="input" placeholder="0.00">
+        </div>
+        <div>
+          <label class="label">Fecha</label>
+          <input type="date" [(ngModel)]="form.date" class="input">
+        </div>
+      </div>
+      <div>
+        <label class="label">Descripción</label>
+        <input type="text" [(ngModel)]="form.description" class="input" placeholder="¿En qué gastaste?">
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button (click)="cancel()" class="btn-secondary">Cancelar</button>
+        <button (click)="save()" class="btn-primary">Guardar</button>
+      </div>
+    </div>
+  }
+
+  @if (expenses.length > 0) {
+    <div class="card overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs uppercase">
+            <th class="text-left p-3">Descripción</th>
+            <th class="text-left p-3">Categoría</th>
+            <th class="text-right p-3">Monto</th>
+            <th class="text-left p-3">Fecha</th>
+            <th class="text-right p-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (expense of expenses; track expense.id) {
+            <tr class="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-hover)]">
+              <td class="p-3">{{ expense.description }}</td>
+              <td class="p-3">
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]">
+                  {{ expense.category }}
+                </span>
+              </td>
+              <td class="p-3 text-right text-red-400 font-medium">{{ formatMoney(expense.amount) }}</td>
+              <td class="p-3 text-[var(--color-text-muted)]">{{ expense.date }}</td>
+              <td class="p-3 text-right">
+                <button (click)="delete(expense.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
+                  <i class="pi pi-trash text-xs"></i>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="card p-8 text-center">
+      <i class="pi pi-shopping-cart text-2xl text-[var(--color-text-muted)] opacity-50"></i>
+      <p class="text-sm text-[var(--color-text-muted)] mt-2">No hay gastos registrados</p>
+    </div>
+  }
+</div>

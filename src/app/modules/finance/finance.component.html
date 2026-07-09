@@ -1,0 +1,39 @@
+<div class="max-w-6xl space-y-6">
+  <div>
+    <h1 class="text-2xl font-semibold">Finanzas</h1>
+    <p class="text-sm text-[var(--color-text-muted)] mt-1">Gestión de ingresos y gastos</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-[var(--color-border)]">
+    @for (tab of tabs; track tab.id) {
+      <button
+        (click)="activeTab = tab.id"
+        class="px-4 py-2 text-sm transition-colors relative"
+        [class]="activeTab === tab.id ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+      >
+        <i [class]="'pi ' + tab.icon + ' mr-2 text-xs'"></i>
+        {{ tab.label }}
+        @if (activeTab === tab.id) {
+          <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]"></span>
+        }
+      </button>
+    }
+  </div>
+
+  <!-- Content -->
+  @switch (activeTab) {
+    @case ('salary') {
+      <app-salary />
+    }
+    @case ('clients') {
+      <app-saas-clients />
+    }
+    @case ('fixed') {
+      <app-fixed-expenses />
+    }
+    @case ('variable') {
+      <app-variable-expenses />
+    }
+  }
+</div>

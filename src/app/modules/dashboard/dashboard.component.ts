@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { DashboardService, DashboardSummary } from './dashboard.service';
+import { formatMoney } from '../../core/config';
 
 @Component({
   selector: 'app-dashboard',
@@ -96,7 +97,5 @@ export class DashboardComponent implements OnInit {
     this.summary = await this.dashboardService.getSummary();
   }
 
-  formatMoney(amount: number): string {
-    return new Intl.NumberFormat('es', { style: 'currency', currency: 'USD' }).format(amount);
-  }
+  formatMoney = formatMoney;
 }

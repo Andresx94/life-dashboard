@@ -37,6 +37,14 @@ export interface FixedExpense {
   reminder: boolean;
 }
 
+export interface FixedExpensePayment {
+  id?: number;
+  expenseId: number;
+  month: number;
+  year: number;
+  paidAt: string;
+}
+
 export interface VariableExpense {
   id?: number;
   category: string;
@@ -113,6 +121,7 @@ class AppDatabase extends Dexie {
   saasClients!: Table<SaasClient>;
   saasPayments!: Table<SaasPayment>;
   fixedExpenses!: Table<FixedExpense>;
+  fixedExpensePayments!: Table<FixedExpensePayment>;
   variableExpenses!: Table<VariableExpense>;
   medications!: Table<Medication>;
   medicationLogs!: Table<MedicationLog>;
@@ -124,11 +133,12 @@ class AppDatabase extends Dexie {
   constructor() {
     super('LifeDashboard');
 
-    this.version(1).stores({
+    this.version(2).stores({
       salaries: '++id, company, date',
       saasClients: '++id, name, status',
       saasPayments: '++id, clientId, [month+year], status',
       fixedExpenses: '++id, category, nextPayment',
+      fixedExpensePayments: '++id, expenseId, [month+year]',
       variableExpenses: '++id, category, date',
       medications: '++id, name',
       medicationLogs: '++id, medicationId, date',

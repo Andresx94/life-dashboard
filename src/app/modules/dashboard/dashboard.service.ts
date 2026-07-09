@@ -29,15 +29,16 @@ export class DashboardService {
     const salaryIncome = salaries.reduce((sum, s) => sum + s.amount, 0);
 
     // Pagos SaaS del mes
+    const activeClients = await db.saasClients.where('status').equals('active').toArray();
+    const expectedSaas = activeClients.reduce((sum, c) => sum + c.monthlyAmount, 0);
+
     const payments = await db.saasPayments
       .where({ month, year })
       .toArray();
     const paidIncome = payments
       .filter(p => p.status === 'paid')
       .reduce((sum, p) => sum + p.amount, 0);
-    const pendingIncome = payments
-      .filter(p => p.status === 'pending')
-      .reduce((sum, p) => sum + p.amount, 0);
+    const pendingIncome = expectedSaas - paidIncome;
 
     // Gastos del mes
     const fixedExpenses = await db.fixedExpenses.toArray();
