@@ -46,15 +46,15 @@
   }
 
   @if (expenses.length > 0) {
-    <div class="card overflow-hidden">
-      <table class="w-full text-sm">
+    <div class="card overflow-x-auto">
+      <table class="w-full text-sm min-w-[600px]">
         <thead>
           <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs uppercase">
             <th class="text-left p-3">Descripción</th>
             <th class="text-left p-3">Categoría</th>
             <th class="text-right p-3">Monto</th>
             <th class="text-left p-3">Fecha</th>
-            <th class="text-right p-3">Acciones</th>
+            <th class="text-right p-3 whitespace-nowrap">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -68,7 +68,7 @@
               </td>
               <td class="p-3 text-right text-red-400 font-medium">{{ formatMoney(expense.amount) }}</td>
               <td class="p-3 text-[var(--color-text-muted)]">{{ expense.date }}</td>
-              <td class="p-3 text-right space-x-2">
+              <td class="p-3 text-right whitespace-nowrap space-x-2">
                 <button (click)="edit(expense)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
                   <i class="pi pi-pencil text-xs"></i>
                 </button>

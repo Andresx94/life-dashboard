@@ -10,6 +10,14 @@ interface TodayMed {
   taken: boolean;
 }
 
+interface PendingMed {
+  medId: number;
+  name: string;
+  dose: string;
+  date: string;
+  dateLabel: string;
+}
+
 interface WeekDay {
   date: string;
   label: string;
@@ -58,6 +66,10 @@ export class MedicationsComponent implements OnInit {
     time: '', startDate: '', endDate: null, notes: '',
   };
 
+  pendingMeds: PendingMed[] = [];
+  pendingAction: { med: PendingMed; mode: 'taken' | 'skipped' | null } | null = null;
+  pendingDate = '';
+
   private today = new Date().toISOString().split('T')[0];
 
   async ngOnInit() {
@@ -91,6 +103,7 @@ export class MedicationsComponent implements OnInit {
     const taken = this.todayMeds.filter(m => m.taken).length;
     this.compliancePercent = total > 0 ? Math.round((taken / total) * 100) : 0;
 
+    await this.loadPending();
     await this.loadWeek();
   }
 
@@ -201,6 +214,67 @@ export class MedicationsComponent implements OnInit {
     if (this.isCurrentWeek) return;
     this.weekOffset++;
     this.loadWeek();
+  }
+
+  async loadPending() {
+    this.pendingMeds = [];
+    const allLogs = await db.medicationLogs.toArray();
+    const logSet = new Set(allLogs.map(l => `${l.medicationId}_${l.date}`));
+
+    // Check last 7 days (excluding today)
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const date = d.toISOString().split('T')[0];
+
+      for (const med of this.medications) {
+        if (!this.isExpectedOnDate(med, date)) continue;
+        const key = `${med.id}_${date}`;
+        if (logSet.has(key)) continue;
+        this.pendingMeds.push({
+          medId: med.id!,
+          name: med.name,
+          dose: med.dose,
+          date,
+          dateLabel: this.formatDateLabel(date),
+        });
+      }
+    }
+  }
+
+  private formatDateLabel(date: string): string {
+    const d = new Date(date + 'T12:00:00');
+    const diff = Math.round((new Date(this.today + 'T12:00:00').getTime() - d.getTime()) / 86400000);
+    if (diff === 1) return 'Ayer';
+    if (diff === 2) return 'Hace 2 días';
+    return `Hace ${diff} días (${d.getDate()}/${d.getMonth() + 1})`;
+  }
+
+  openPendingAction(med: PendingMed) {
+    this.pendingAction = { med, mode: null };
+    this.pendingDate = med.date;
+  }
+
+  async markPendingTaken() {
+    if (!this.pendingAction) return;
+    await db.medicationLogs.add({
+      medicationId: this.pendingAction.med.medId,
+      date: this.pendingDate || this.pendingAction.med.date,
+      taken: true,
+    });
+    this.pendingAction = null;
+    await this.load();
+  }
+
+  async markPendingSkipped() {
+    if (!this.pendingAction) return;
+    await db.medicationLogs.add({
+      medicationId: this.pendingAction.med.medId,
+      date: this.pendingAction.med.date,
+      taken: false,
+    });
+    this.pendingAction = null;
+    await this.load();
   }
 
   async toggleTaken(med: TodayMed) {
