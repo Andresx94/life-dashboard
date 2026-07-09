@@ -68,7 +68,10 @@
               </td>
               <td class="p-3 text-right text-red-400 font-medium">{{ formatMoney(expense.amount) }}</td>
               <td class="p-3 text-[var(--color-text-muted)]">{{ expense.date }}</td>
-              <td class="p-3 text-right">
+              <td class="p-3 text-right space-x-2">
+                <button (click)="edit(expense)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
+                  <i class="pi pi-pencil text-xs"></i>
+                </button>
                 <button (click)="delete(expense.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
                   <i class="pi pi-trash text-xs"></i>
                 </button>

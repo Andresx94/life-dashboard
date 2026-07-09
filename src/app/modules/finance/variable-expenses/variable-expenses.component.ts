@@ -12,6 +12,7 @@ import { formatMoney } from '../../../core/config';
 export class VariableExpensesComponent implements OnInit {
   expenses: VariableExpense[] = [];
   showForm = false;
+  editingId: number | null = null;
   monthlyTotal = 0;
 
   form: VariableExpense = { category: '', amount: 0, date: '', description: '' };
@@ -41,9 +42,19 @@ export class VariableExpensesComponent implements OnInit {
 
   async save() {
     if (!this.form.category || !this.form.amount || !this.form.date) return;
-    await db.variableExpenses.add({ ...this.form });
+    if (this.editingId) {
+      await db.variableExpenses.update(this.editingId, { ...this.form });
+    } else {
+      await db.variableExpenses.add({ ...this.form });
+    }
     this.cancel();
     await this.load();
+  }
+
+  edit(expense: VariableExpense) {
+    this.form = { category: expense.category, amount: expense.amount, date: expense.date, description: expense.description };
+    this.editingId = expense.id!;
+    this.showForm = true;
   }
 
   async delete(id: number) {
@@ -53,6 +64,7 @@ export class VariableExpensesComponent implements OnInit {
 
   cancel() {
     this.form = { category: '', amount: 0, date: '', description: '' };
+    this.editingId = null;
     this.showForm = false;
   }
 

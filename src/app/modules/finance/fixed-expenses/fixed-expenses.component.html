@@ -70,6 +70,10 @@
           <input type="date" [(ngModel)]="form.nextPayment" class="input">
         </div>
       </div>
+      <div>
+        <label class="label">Notas</label>
+        <textarea [(ngModel)]="form.notes" class="input" rows="2" placeholder="Desglose o detalle del gasto"></textarea>
+      </div>
       <div class="flex gap-2 justify-end">
         <button (click)="cancel()" class="btn-secondary">Cancelar</button>
         <button (click)="save()" class="btn-primary">Guardar</button>
@@ -78,15 +82,15 @@
   }
 
   @if (expenses.length > 0) {
-    <div class="card overflow-hidden">
-      <table class="w-full text-sm">
+    <div class="card overflow-x-auto">
+      <table class="w-full text-sm min-w-[600px]">
         <thead>
           <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs uppercase">
             <th class="text-left p-3">Nombre</th>
             <th class="text-left p-3">Categoría</th>
             <th class="text-right p-3">Monto</th>
             <th class="text-center p-3">Estado</th>
-            <th class="text-right p-3">Acciones</th>
+            <th class="text-right p-3 whitespace-nowrap">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +102,7 @@
                   {{ expense.category }}
                 </span>
               </td>
-              <td class="p-3 text-right text-red-400 font-medium">{{ formatMoney(expense.amount) }}</td>
+              <td class="p-3 text-right text-red-400 font-medium whitespace-nowrap">{{ formatMoney(expense.amount) }}</td>
               <td class="p-3 text-center">
                 @if (isPaid(expense.id!)) {
                   <button (click)="unmarkPaid(expense.id!)" class="text-emerald-400 text-xs hover:text-red-400 transition-colors">
@@ -110,7 +114,13 @@
                   </button>
                 }
               </td>
-              <td class="p-3 text-right">
+              <td class="p-3 text-right whitespace-nowrap space-x-2">
+                <button (click)="viewExpense = expense" class="text-[var(--color-text-muted)] hover:text-cyan-400 transition-colors">
+                  <i class="pi pi-eye text-xs"></i>
+                </button>
+                <button (click)="edit(expense)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
+                  <i class="pi pi-pencil text-xs"></i>
+                </button>
                 <button (click)="delete(expense.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
                   <i class="pi pi-trash text-xs"></i>
                 </button>
@@ -127,3 +137,41 @@
     </div>
   }
 </div>
+
+<!-- Modal detalle -->
+@if (viewExpense) {
+  <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" (click)="viewExpense = null">
+    <div class="card p-6 max-w-md w-full space-y-3" (click)="$event.stopPropagation()">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-bold">{{ viewExpense.name }}</h3>
+        <button (click)="viewExpense = null" class="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <span class="text-[var(--color-text-muted)]">Categoría:</span>
+          <p>{{ viewExpense.category }}</p>
+        </div>
+        <div>
+          <span class="text-[var(--color-text-muted)]">Monto:</span>
+          <p class="text-red-400 font-medium">{{ formatMoney(viewExpense.amount) }}</p>
+        </div>
+        <div>
+          <span class="text-[var(--color-text-muted)]">Frecuencia:</span>
+          <p>{{ viewExpense.frequency }}</p>
+        </div>
+        <div>
+          <span class="text-[var(--color-text-muted)]">Próximo pago:</span>
+          <p>{{ viewExpense.nextPayment || '—' }}</p>
+        </div>
+      </div>
+      @if (viewExpense.notes) {
+        <div>
+          <span class="text-sm text-[var(--color-text-muted)]">Notas:</span>
+          <p class="text-sm mt-1 whitespace-pre-wrap bg-[var(--color-surface-hover)] p-3 rounded-lg max-h-48 overflow-y-auto">{{ viewExpense.notes }}</p>
+        </div>
+      }
+    </div>
+  </div>
+}

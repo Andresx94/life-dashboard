@@ -99,7 +99,10 @@
                   </button>
                 }
               </td>
-              <td class="p-3 text-right">
+              <td class="p-3 text-right space-x-2">
+                <button (click)="editClient(client)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
+                  <i class="pi pi-pencil text-xs"></i>
+                </button>
                 <button (click)="deleteClient(client.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
                   <i class="pi pi-trash text-xs"></i>
                 </button>

@@ -18,6 +18,7 @@ export class FixedExpensesComponent implements OnInit {
   expenses: FixedExpense[] = [];
   payments: FixedExpensePayment[] = [];
   showForm = false;
+  editingId: number | null = null;
 
   monthlyTotal = 0;
   paidTotal = 0;
@@ -32,13 +33,15 @@ export class FixedExpensesComponent implements OnInit {
 
   form: FixedExpense = {
     name: '', category: '', amount: 0,
-    frequency: 'monthly', nextPayment: '', reminder: true,
+    frequency: 'monthly', nextPayment: '', reminder: true, notes: '',
   };
 
   categories = [
     'Salud', 'Tecnología', 'Servicios', 'Transporte',
-    'Entretenimiento', 'Seguros', 'Educación', 'Otro',
+    'Entretenimiento', 'Seguros', 'Educación', 'Intereses', 'Otro',
   ];
+
+  viewExpense: FixedExpense | null = null;
 
   constructor() {
     const now = new Date();
@@ -120,9 +123,19 @@ export class FixedExpensesComponent implements OnInit {
 
   async save() {
     if (!this.form.name || !this.form.amount) return;
-    await db.fixedExpenses.add({ ...this.form });
+    if (this.editingId) {
+      await db.fixedExpenses.update(this.editingId, { ...this.form });
+    } else {
+      await db.fixedExpenses.add({ ...this.form });
+    }
     this.cancel();
     await this.load();
+  }
+
+  edit(expense: FixedExpense) {
+    this.form = { name: expense.name, category: expense.category, amount: expense.amount, frequency: expense.frequency, nextPayment: expense.nextPayment, reminder: expense.reminder, notes: expense.notes || '' };
+    this.editingId = expense.id!;
+    this.showForm = true;
   }
 
   async delete(id: number) {
@@ -131,7 +144,8 @@ export class FixedExpensesComponent implements OnInit {
   }
 
   cancel() {
-    this.form = { name: '', category: '', amount: 0, frequency: 'monthly', nextPayment: '', reminder: true };
+    this.form = { name: '', category: '', amount: 0, frequency: 'monthly', nextPayment: '', reminder: true, notes: '' };
+    this.editingId = null;
     this.showForm = false;
   }
 }

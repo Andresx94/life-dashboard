@@ -29,6 +29,7 @@ export class SaasClientsComponent implements OnInit {
   clients: SaasClient[] = [];
   payments: SaasPayment[] = [];
   showForm = false;
+  editingId: number | null = null;
   form: SaasClient = { name: '', company: '', monthlyAmount: 0, status: 'active', notes: '' };
 
   expected = 0;
@@ -121,9 +122,19 @@ export class SaasClientsComponent implements OnInit {
 
   async saveClient() {
     if (!this.form.name || !this.form.monthlyAmount) return;
-    await db.saasClients.add({ ...this.form });
+    if (this.editingId) {
+      await db.saasClients.update(this.editingId, { ...this.form });
+    } else {
+      await db.saasClients.add({ ...this.form });
+    }
     this.cancelForm();
     await this.load();
+  }
+
+  editClient(client: SaasClient) {
+    this.form = { name: client.name, company: client.company, monthlyAmount: client.monthlyAmount, status: client.status, notes: client.notes };
+    this.editingId = client.id!;
+    this.showForm = true;
   }
 
   async deleteClient(id: number) {
@@ -133,6 +144,7 @@ export class SaasClientsComponent implements OnInit {
 
   cancelForm() {
     this.form = { name: '', company: '', monthlyAmount: 0, status: 'active', notes: '' };
+    this.editingId = null;
     this.showForm = false;
   }
 }

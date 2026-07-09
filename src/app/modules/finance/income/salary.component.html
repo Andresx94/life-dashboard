@@ -56,7 +56,10 @@
               <td class="p-3 text-right text-emerald-400 font-medium">{{ formatMoney(salary.amount) }}</td>
               <td class="p-3 text-[var(--color-text-muted)]">{{ salary.date }}</td>
               <td class="p-3 text-[var(--color-text-muted)]">{{ salary.notes }}</td>
-              <td class="p-3 text-right">
+              <td class="p-3 text-right space-x-2">
+                <button (click)="edit(salary)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
+                  <i class="pi pi-pencil text-xs"></i>
+                </button>
                 <button (click)="delete(salary.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
                   <i class="pi pi-trash text-xs"></i>
                 </button>

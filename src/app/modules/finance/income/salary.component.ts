@@ -12,6 +12,7 @@ import { formatMoney } from '../../../core/config';
 export class SalaryComponent implements OnInit {
   salaries: Salary[] = [];
   showForm = false;
+  editingId: number | null = null;
   form: Salary = { company: '', amount: 0, date: '', notes: '' };
 
   async ngOnInit() {
@@ -24,9 +25,19 @@ export class SalaryComponent implements OnInit {
 
   async save() {
     if (!this.form.company || !this.form.amount || !this.form.date) return;
-    await db.salaries.add({ ...this.form });
+    if (this.editingId) {
+      await db.salaries.update(this.editingId, { ...this.form });
+    } else {
+      await db.salaries.add({ ...this.form });
+    }
     this.cancel();
     await this.load();
+  }
+
+  edit(salary: Salary) {
+    this.form = { company: salary.company, amount: salary.amount, date: salary.date, notes: salary.notes };
+    this.editingId = salary.id!;
+    this.showForm = true;
   }
 
   async delete(id: number) {
@@ -36,6 +47,7 @@ export class SalaryComponent implements OnInit {
 
   cancel() {
     this.form = { company: '', amount: 0, date: '', notes: '' };
+    this.editingId = null;
     this.showForm = false;
   }
 

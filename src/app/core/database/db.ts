@@ -35,6 +35,7 @@ export interface FixedExpense {
   frequency: 'monthly' | 'yearly' | 'weekly' | 'biweekly';
   nextPayment: string;
   reminder: boolean;
+  notes?: string;
 }
 
 export interface FixedExpensePayment {
