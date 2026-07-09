@@ -87,16 +87,19 @@ export class DashboardComponent implements OnInit {
     monthlyIncome: 0,
     pendingIncome: 0,
     monthlyExpenses: 0,
+    expensesPaid: 0,
+    expensesPending: 0,
     balance: 0,
-    upcomingPayments: [],
-    pendingMedications: [],
     pendingClients: [],
+    pendingFixedExpenses: [],
+    pendingMedications: [],
     upcomingReminders: [],
+    upcomingMaintenances: [],
   };
+
+  formatMoney = formatMoney;
 
   async ngOnInit() {
     this.summary = await this.dashboardService.getSummary();
   }
-
-  formatMoney = formatMoney;
 }

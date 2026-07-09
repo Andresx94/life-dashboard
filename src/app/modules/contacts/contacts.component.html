@@ -1,0 +1,139 @@
+<div class="max-w-6xl space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold">Tarjetero</h1>
+      <p class="text-sm text-[var(--color-text-muted)] mt-1">Tarjetas de presentación</p>
+    </div>
+    <button (click)="showForm = !showForm" class="btn-primary">
+      <i class="pi pi-plus text-xs"></i> Agregar
+    </button>
+  </div>
+
+  <!-- Search -->
+  @if (contacts.length > 0) {
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="filter()"
+      class="input"
+      placeholder="Buscar..."
+    >
+  }
+
+  <!-- Form -->
+  @if (showForm) {
+    <div class="card p-4 space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="label">Nombre</label>
+          <input type="text" [(ngModel)]="form.name" class="input" placeholder="Nombre o empresa">
+        </div>
+        <div>
+          <label class="label">Categoría</label>
+          <select [(ngModel)]="form.category" class="input">
+            <option value="">Sin categoría</option>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="label">Notas</label>
+        <textarea [(ngModel)]="form.notes" class="input" rows="2" placeholder="Teléfono, correo, dirección, lo que quieras..."></textarea>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="label">Foto frontal</label>
+          <input type="file" accept="image/*" (change)="onFileChange($event, 'front')" class="input text-xs">
+        </div>
+        <div>
+          <label class="label">Foto trasera</label>
+          <input type="file" accept="image/*" (change)="onFileChange($event, 'back')" class="input text-xs">
+        </div>
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button (click)="cancelForm()" class="btn-secondary">Cancelar</button>
+        <button (click)="save()" class="btn-primary">{{ editingId ? 'Actualizar' : 'Guardar' }}</button>
+      </div>
+    </div>
+  }
+
+  <!-- Cards -->
+  @if (filtered.length > 0) {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (c of filtered; track c.id) {
+        <div class="card p-4 space-y-3 hover:border-[#3b3b3b] transition-colors">
+          @if (c.photoFront) {
+            <div (click)="openPhoto(c)" class="rounded-lg overflow-hidden bg-[var(--color-bg)] h-36 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+              <img [src]="c.photoFront" class="max-h-full object-contain" alt="Tarjeta">
+            </div>
+          }
+          <div>
+            <div class="flex items-center justify-between">
+              <p class="font-medium text-sm">{{ c.name }}</p>
+              @if (c.category) {
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]">{{ c.category }}</span>
+              }
+            </div>
+            @if (c.notes) {
+              <p class="text-xs text-[var(--color-text-muted)] mt-1 whitespace-pre-line">{{ c.notes }}</p>
+            }
+          </div>
+          <div class="flex gap-2 pt-2 border-t border-[var(--color-border)]">
+            <button (click)="edit(c)" class="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors text-xs">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button (click)="delete(c.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors text-xs">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (contacts.length === 0) {
+    <div class="card p-8 text-center">
+      <i class="pi pi-id-card text-2xl text-[var(--color-text-muted)] opacity-50"></i>
+      <p class="text-sm text-[var(--color-text-muted)] mt-2">No hay tarjetas registradas</p>
+    </div>
+  } @else {
+    <div class="card p-8 text-center">
+      <p class="text-sm text-[var(--color-text-muted)]">Sin resultados</p>
+    </div>
+  }
+
+  <!-- Photo modal -->
+  @if (photoModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80" (click)="photoModal = null">
+      <div class="max-w-3xl w-full mx-4 space-y-4" (click)="$event.stopPropagation()">
+        <!-- Tabs front/back -->
+        <div class="flex justify-center gap-2">
+          <button
+            (click)="photoSide = 'front'"
+            class="px-3 py-1 text-sm rounded-lg"
+            [class]="photoSide === 'front' ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'"
+          >Frontal</button>
+          @if (photoModal.photoBack) {
+            <button
+              (click)="photoSide = 'back'"
+              class="px-3 py-1 text-sm rounded-lg"
+              [class]="photoSide === 'back' ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'"
+            >Reverso</button>
+          }
+        </div>
+        <!-- Image -->
+        <div class="rounded-xl overflow-hidden bg-[var(--color-surface)] flex items-center justify-center">
+          <img
+            [src]="photoSide === 'front' ? photoModal.photoFront : photoModal.photoBack"
+            class="max-h-[70vh] w-full object-contain"
+            alt="Tarjeta"
+          >
+        </div>
+        <!-- Close -->
+        <div class="flex justify-center">
+          <button (click)="photoModal = null" class="btn-secondary">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
