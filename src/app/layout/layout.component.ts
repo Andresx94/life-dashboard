@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { BackupService } from '../core/backup/backup.service';
 
 interface NavItem {
   path: string;
@@ -45,6 +46,8 @@ interface NavItem {
   `],
 })
 export class LayoutComponent {
+  private backupService = inject(BackupService);
+
   navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: 'pi-home' },
     { path: '/finance', label: 'Finanzas', icon: 'pi-wallet' },
@@ -53,4 +56,21 @@ export class LayoutComponent {
     { path: '/contacts', label: 'Tarjetero', icon: 'pi-id-card' },
     { path: '/reminders', label: 'Recordatorios', icon: 'pi-bell' },
   ];
+
+  async exportBackup() {
+    await this.backupService.exportBackup();
+  }
+
+  async importBackup(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const result = await this.backupService.importBackup(file);
+    alert(result.message);
+    if (result.success) {
+      window.location.reload();
+    }
+    input.value = '';
+  }
 }

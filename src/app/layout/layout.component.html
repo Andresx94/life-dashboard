@@ -22,11 +22,20 @@
     </nav>
 
     <!-- Search (right side) -->
-    <button class="nav-link ml-auto">
-      <i class="pi pi-search"></i>
-      <span class="hidden md:inline">Buscar</span>
-      <kbd class="hidden md:inline text-[10px] bg-[var(--color-bg)] text-[var(--color-text-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)] ml-1">Ctrl+K</kbd>
-    </button>
+    <div class="flex items-center gap-1 ml-auto">
+      <button class="nav-link" (click)="exportBackup()" title="Descargar backup">
+        <i class="pi pi-download"></i>
+      </button>
+      <button class="nav-link" (click)="fileInput.click()" title="Restaurar backup">
+        <i class="pi pi-upload"></i>
+      </button>
+      <input #fileInput type="file" accept=".json" (change)="importBackup($event)" class="hidden">
+      <button class="nav-link">
+        <i class="pi pi-search"></i>
+        <span class="hidden md:inline">Buscar</span>
+        <kbd class="hidden md:inline text-[10px] bg-[var(--color-bg)] text-[var(--color-text-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)] ml-1">Ctrl+K</kbd>
+      </button>
+    </div>
   </header>
 
   <!-- Main content -->
