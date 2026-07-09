@@ -90,6 +90,7 @@ export class DashboardComponent implements OnInit {
     balance: 0,
     upcomingPayments: [],
     pendingMedications: [],
+    pendingClients: [],
     upcomingReminders: [],
   };
 

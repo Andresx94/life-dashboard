@@ -80,4 +80,19 @@ export class BackupService {
       return { success: false, message: 'Error al leer el archivo' };
     }
   }
+
+  async clearAll(): Promise<void> {
+    await db.salaries.clear();
+    await db.saasClients.clear();
+    await db.saasPayments.clear();
+    await db.fixedExpenses.clear();
+    await db.fixedExpensePayments.clear();
+    await db.variableExpenses.clear();
+    await db.medications.clear();
+    await db.medicationLogs.clear();
+    await db.contacts.clear();
+    await db.vehicles.clear();
+    await db.maintenances.clear();
+    await db.reminders.clear();
+  }
 }

@@ -47,6 +47,7 @@ interface NavItem {
 })
 export class LayoutComponent {
   private backupService = inject(BackupService);
+  menuOpen = false;
 
   navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: 'pi-home' },
@@ -72,5 +73,12 @@ export class LayoutComponent {
       window.location.reload();
     }
     input.value = '';
+  }
+
+  async clearAll() {
+    if (!confirm('¿Estás seguro? Se eliminarán TODOS los datos. Esta acción no se puede deshacer.')) return;
+    if (!confirm('¿Realmente seguro? Último aviso.')) return;
+    await this.backupService.clearAll();
+    window.location.reload();
   }
 }

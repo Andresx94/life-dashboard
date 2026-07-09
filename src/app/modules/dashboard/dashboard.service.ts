@@ -8,6 +8,7 @@ export interface DashboardSummary {
   balance: number;
   upcomingPayments: { name: string; amount: number }[];
   pendingMedications: { name: string; time: string }[];
+  pendingClients: { name: string; amount: number }[];
   upcomingReminders: { title: string; date: string }[];
 }
 
@@ -57,6 +58,12 @@ export class DashboardService {
     const monthlyExpenses = fixedTotal + variableTotal;
     const monthlyIncome = salaryIncome + paidIncome;
 
+    // Clientes SaaS pendientes de cobro
+    const paidClientIds = new Set(payments.filter(p => p.status === 'paid').map(p => p.clientId));
+    const pendingClients = activeClients
+      .filter(c => !paidClientIds.has(c.id!))
+      .map(c => ({ name: c.name, amount: c.monthlyAmount }));
+
     // Próximos pagos (gastos fijos próximos 7 días)
     const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const upcomingPayments = fixedExpenses
@@ -95,6 +102,7 @@ export class DashboardService {
       balance: monthlyIncome - monthlyExpenses,
       upcomingPayments,
       pendingMedications,
+      pendingClients,
       upcomingReminders: upcomingReminders.map(r => ({ title: r.title, date: r.date })),
     };
   }

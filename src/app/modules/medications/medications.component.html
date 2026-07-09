@@ -1,0 +1,266 @@
+<div class="max-w-6xl space-y-6">
+  <div>
+    <h1 class="text-2xl font-semibold">Medicamentos</h1>
+    <p class="text-sm text-[var(--color-text-muted)] mt-1">Control de medicamentos y suplementos</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-[var(--color-border)]">
+    <button
+      (click)="activeTab = 'today'"
+      class="px-4 py-2 text-sm transition-colors relative"
+      [class]="activeTab === 'today' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+    >
+      <i class="pi pi-check-square mr-2 text-xs"></i>Hoy
+      @if (activeTab === 'today') {
+        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]"></span>
+      }
+    </button>
+    <button
+      (click)="activeTab = 'week'"
+      class="px-4 py-2 text-sm transition-colors relative"
+      [class]="activeTab === 'week' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+    >
+      <i class="pi pi-calendar mr-2 text-xs"></i>Semana
+      @if (activeTab === 'week') {
+        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]"></span>
+      }
+    </button>
+    <button
+      (click)="activeTab = 'list'"
+      class="px-4 py-2 text-sm transition-colors relative"
+      [class]="activeTab === 'list' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+    >
+      <i class="pi pi-list mr-2 text-xs"></i>Medicamentos
+      @if (activeTab === 'list') {
+        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]"></span>
+      }
+    </button>
+  </div>
+
+  <!-- TODAY VIEW -->
+  @if (activeTab === 'today') {
+    <div class="space-y-4">
+      <!-- Compliance -->
+      @if (todayMeds.length > 0) {
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-[var(--color-text-muted)]">Cumplimiento hoy</span>
+            <span class="text-sm font-bold" [class]="compliancePercent === 100 ? 'text-emerald-400' : 'text-amber-400'">
+              {{ compliancePercent }}%
+            </span>
+          </div>
+          <div class="w-full h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              [class]="compliancePercent === 100 ? 'bg-emerald-400' : 'bg-amber-400'"
+              [style.width.%]="compliancePercent"
+            ></div>
+          </div>
+        </div>
+      }
+
+      <!-- Today's medications -->
+      @if (todayMeds.length > 0) {
+        <div class="space-y-2">
+          @for (med of todayMeds; track med.id) {
+            <div class="card p-4 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <button (click)="toggleTaken(med)" class="text-lg">
+                  @if (med.taken) {
+                    <i class="pi pi-check-circle text-emerald-400"></i>
+                  } @else {
+                    <i class="pi pi-circle text-[var(--color-text-muted)]"></i>
+                  }
+                </button>
+                <div>
+                  <p class="text-sm font-medium" [class]="med.taken ? 'line-through text-[var(--color-text-muted)]' : ''">{{ med.name }}</p>
+                  <p class="text-xs text-[var(--color-text-muted)]">{{ med.dose }} — {{ med.time }}</p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="card p-8 text-center">
+          <i class="pi pi-check-circle text-2xl text-emerald-400/50"></i>
+          <p class="text-sm text-[var(--color-text-muted)] mt-2">No hay medicamentos activos</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- WEEK VIEW -->
+  @if (activeTab === 'week') {
+    <div class="space-y-4">
+      <!-- Week navigation -->
+      <div class="flex items-center gap-3">
+        <button (click)="prevWeek()" class="btn-secondary">
+          <i class="pi pi-chevron-left text-xs"></i>
+        </button>
+        <span class="text-sm font-medium min-w-[200px] text-center">{{ weekLabel }}</span>
+        <button (click)="nextWeek()" class="btn-secondary" [disabled]="isCurrentWeek">
+          <i class="pi pi-chevron-right text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Weekly compliance -->
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-[var(--color-text-muted)]">Cumplimiento semanal</span>
+          <span class="text-sm font-bold" [class]="weeklyCompliancePercent === 100 ? 'text-emerald-400' : 'text-amber-400'">
+            {{ weeklyCompliancePercent }}%
+          </span>
+        </div>
+        <div class="w-full h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
+          <div
+            class="h-full rounded-full transition-all duration-300"
+            [class]="weeklyCompliancePercent === 100 ? 'bg-emerald-400' : 'bg-amber-400'"
+            [style.width.%]="weeklyCompliancePercent"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Week grid -->
+      @if (weekData.length > 0) {
+        <div class="card overflow-hidden overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs">
+                <th class="text-left p-3 min-w-[120px]">Medicamento</th>
+                @for (day of weekDays; track day.date) {
+                  <th class="text-center p-3 min-w-[60px]">
+                    <div>{{ day.label }}</div>
+                    <div class="text-[10px] opacity-60">{{ day.short }}</div>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of weekData; track row.medId) {
+                <tr class="border-b border-[var(--color-border)] last:border-0">
+                  <td class="p-3 font-medium">{{ row.name }}</td>
+                  @for (day of row.days; track day.date) {
+                    <td class="p-3 text-center">
+                      @if (day.future || !day.expected) {
+                        <span class="text-[var(--color-text-muted)] opacity-30">—</span>
+                      } @else if (day.taken) {
+                        <i class="pi pi-check-circle text-emerald-400"></i>
+                      } @else {
+                        <i class="pi pi-times-circle text-red-400/60"></i>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="card p-8 text-center">
+          <i class="pi pi-calendar text-2xl text-[var(--color-text-muted)] opacity-50"></i>
+          <p class="text-sm text-[var(--color-text-muted)] mt-2">No hay datos para esta semana</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- LIST VIEW -->
+  @if (activeTab === 'list') {
+    <div class="space-y-4">
+      <div class="flex justify-end">
+        <button (click)="showForm = !showForm" class="btn-primary">
+          <i class="pi pi-plus text-xs"></i>
+          Agregar
+        </button>
+      </div>
+
+      @if (showForm) {
+        <div class="card p-4 space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="label">Nombre</label>
+              <input type="text" [(ngModel)]="form.name" class="input" placeholder="Ej: Vitamina D">
+            </div>
+            <div>
+              <label class="label">Dosis</label>
+              <input type="text" [(ngModel)]="form.dose" class="input" placeholder="Ej: 1000mg">
+            </div>
+            <div>
+              <label class="label">Hora</label>
+              <input type="time" [(ngModel)]="form.time" class="input">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="label">Frecuencia</label>
+              <select [(ngModel)]="form.frequency" class="input">
+                <option value="diario">Diario</option>
+                <option value="cada 12h">Cada 12h</option>
+                <option value="cada 8h">Cada 8h</option>
+                <option value="semanal">Semanal</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Fecha inicio</label>
+              <input type="date" [(ngModel)]="form.startDate" class="input">
+            </div>
+            <div>
+              <label class="label">Fecha fin (opcional)</label>
+              <input type="date" [(ngModel)]="form.endDate" class="input">
+            </div>
+          </div>
+          <div>
+            <label class="label">Notas</label>
+            <input type="text" [(ngModel)]="form.notes" class="input" placeholder="Opcional">
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button (click)="cancelForm()" class="btn-secondary">Cancelar</button>
+            <button (click)="save()" class="btn-primary">Guardar</button>
+          </div>
+        </div>
+      }
+
+      @if (medications.length > 0) {
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs uppercase">
+                <th class="text-left p-3">Nombre</th>
+                <th class="text-left p-3">Dosis</th>
+                <th class="text-left p-3">Hora</th>
+                <th class="text-left p-3">Frecuencia</th>
+                <th class="text-left p-3">Inicio</th>
+                <th class="text-right p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (med of medications; track med.id) {
+                <tr class="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-hover)]">
+                  <td class="p-3">{{ med.name }}</td>
+                  <td class="p-3 text-[var(--color-text-muted)]">{{ med.dose }}</td>
+                  <td class="p-3 text-[var(--color-text-muted)]">{{ med.time }}</td>
+                  <td class="p-3 text-[var(--color-text-muted)]">{{ med.frequency }}</td>
+                  <td class="p-3 text-[var(--color-text-muted)]">{{ med.startDate }}</td>
+                  <td class="p-3 text-right space-x-2">
+                    <button (click)="edit(med)" class="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors">
+                      <i class="pi pi-pencil text-xs"></i>
+                    </button>
+                    <button (click)="delete(med.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
+                      <i class="pi pi-trash text-xs"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="card p-8 text-center">
+          <i class="pi pi-heart text-2xl text-[var(--color-text-muted)] opacity-50"></i>
+          <p class="text-sm text-[var(--color-text-muted)] mt-2">No hay medicamentos registrados</p>
+        </div>
+      }
+    </div>
+  }
+</div>

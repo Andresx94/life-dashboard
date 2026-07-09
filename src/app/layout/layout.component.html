@@ -1,14 +1,19 @@
-<div class="flex h-screen overflow-hidden">
-  <!-- Sidebar -->
-  <header class="h-14 border-b border-[var(--color-border)] bg-[var(--color-surface)] flex items-center px-6 shrink-0 w-full fixed top-0 z-50">
+<div class="flex flex-col h-screen overflow-hidden">
+  <!-- Top Navbar -->
+  <header class="h-14 border-b border-[var(--color-border)] bg-[var(--color-surface)] flex items-center px-4 md:px-6 shrink-0 fixed top-0 w-full z-50">
+    <!-- Mobile menu button -->
+    <button (click)="menuOpen = !menuOpen" class="nav-link md:hidden mr-2">
+      <i class="pi pi-bars"></i>
+    </button>
+
     <!-- Logo -->
-    <div class="flex items-center gap-3 mr-10">
+    <div class="flex items-center gap-3 mr-6 lg:mr-10">
       <i class="pi pi-objects-column text-[var(--color-accent)] text-xl"></i>
-      <span class="text-lg font-bold tracking-tight">Life Dashboard</span>
+      <span class="text-lg font-bold tracking-tight hidden sm:inline">Life Dashboard</span>
     </div>
 
-    <!-- Navigation -->
-    <nav class="flex items-center gap-1">
+    <!-- Navigation (desktop) -->
+    <nav class="hidden md:flex items-center gap-1">
       @for (item of navItems; track item.path) {
         <a
           [routerLink]="item.path"
@@ -21,7 +26,7 @@
       }
     </nav>
 
-    <!-- Search (right side) -->
+    <!-- Right actions -->
     <div class="flex items-center gap-1 ml-auto">
       <button class="nav-link" (click)="exportBackup()" title="Descargar backup">
         <i class="pi pi-download"></i>
@@ -29,18 +34,36 @@
       <button class="nav-link" (click)="fileInput.click()" title="Restaurar backup">
         <i class="pi pi-upload"></i>
       </button>
-      <input #fileInput type="file" accept=".json" (change)="importBackup($event)" class="hidden">
-      <button class="nav-link">
-        <i class="pi pi-search"></i>
-        <span class="hidden md:inline">Buscar</span>
-        <kbd class="hidden md:inline text-[10px] bg-[var(--color-bg)] text-[var(--color-text-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)] ml-1">Ctrl+K</kbd>
+      <button class="nav-link" (click)="clearAll()" title="Limpiar todo">
+        <i class="pi pi-trash"></i>
       </button>
+      <input #fileInput type="file" accept=".json" (change)="importBackup($event)" class="hidden">
     </div>
   </header>
 
+  <!-- Mobile menu overlay -->
+  @if (menuOpen) {
+    <div class="fixed inset-0 z-40 md:hidden" (click)="menuOpen = false">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <nav class="absolute top-14 left-0 right-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] p-3 space-y-1" (click)="$event.stopPropagation()">
+        @for (item of navItems; track item.path) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active-link"
+            class="nav-link w-full"
+            (click)="menuOpen = false"
+          >
+            <i [class]="'pi ' + item.icon"></i>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    </div>
+  }
+
   <!-- Main content -->
   <main class="flex-1 overflow-y-auto pt-14 w-full">
-    <div class="p-8">
+    <div class="p-4 md:p-8">
       <router-outlet />
     </div>
   </main>
