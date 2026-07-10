@@ -105,6 +105,8 @@ export interface Maintenance {
   notes: string;
   nextDate: string | null;
   nextKm: number | null;
+  recommendedNextDate: string | null;
+  recommendedNextKm: number | null;
 }
 
 export interface Reminder {
@@ -134,7 +136,7 @@ class AppDatabase extends Dexie {
   constructor() {
     super('LifeDashboard');
 
-    this.version(2).stores({
+    this.version(3).stores({
       salaries: '++id, company, date',
       saasClients: '++id, name, status',
       saasPayments: '++id, clientId, [month+year], status',

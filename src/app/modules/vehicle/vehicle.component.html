@@ -41,7 +41,22 @@
   <!-- INFO TAB -->
   @if (activeTab === 'info') {
     <div class="space-y-4">
-      @if (vehicle) {
+      <!-- Vehicle selector -->
+      @if (vehicles.length > 1) {
+        <div class="flex gap-2 flex-wrap">
+          @for (v of vehicles; track v.id) {
+            <button
+              (click)="selectVehicle(v)"
+              class="px-3 py-2 rounded-lg text-sm transition-colors"
+              [class]="vehicle?.id === v.id ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+            >
+              <i class="pi pi-car text-xs mr-1"></i> {{ v.brand }} {{ v.model }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (vehicle && !showVehicleForm) {
         <div class="card p-5 space-y-4">
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
@@ -65,12 +80,18 @@
               <p class="text-sm font-medium">{{ vehicle.currentKm | number }} km</p>
             </div>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 flex-wrap">
             <button (click)="editVehicle()" class="btn-secondary">
               <i class="pi pi-pencil text-xs"></i> Editar
             </button>
             <button (click)="showKmUpdate = true" class="btn-primary">
               <i class="pi pi-refresh text-xs"></i> Actualizar km
+            </button>
+            <button (click)="addVehicle()" class="btn-secondary">
+              <i class="pi pi-plus text-xs"></i> Agregar otro
+            </button>
+            <button (click)="deleteVehicle(vehicle.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors px-2">
+              <i class="pi pi-trash text-xs"></i>
             </button>
           </div>
         </div>
@@ -87,7 +108,7 @@
         }
       } @else {
         <div class="card p-4 space-y-3">
-          <p class="text-sm text-[var(--color-text-muted)]">Registra tu vehículo</p>
+          <p class="text-sm text-[var(--color-text-muted)]">{{ editingVehicleId ? 'Editar vehículo' : 'Registrar vehículo' }}</p>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label class="label">Marca</label>
@@ -112,7 +133,10 @@
               <input type="number" [(ngModel)]="vehicleForm.currentKm" class="input" placeholder="0">
             </div>
           </div>
-          <div class="flex justify-end">
+          <div class="flex gap-2 justify-end">
+            @if (editingVehicleId || vehicles.length > 0) {
+              <button (click)="cancelVehicleForm()" class="btn-secondary">Cancelar</button>
+            }
             <button (click)="saveVehicle()" class="btn-primary">Guardar vehículo</button>
           </div>
         </div>
@@ -123,18 +147,47 @@
   <!-- MAINTENANCE TAB -->
   @if (activeTab === 'maintenance') {
     <div class="space-y-4">
-      <div class="flex justify-end">
-        <button (click)="showMaintenanceForm = !showMaintenanceForm" class="btn-primary">
-          <i class="pi pi-plus text-xs"></i> Registrar mantenimiento
-        </button>
-      </div>
+      <!-- Vehicle selector -->
+      @if (vehicles.length > 1) {
+        <div class="flex gap-2 flex-wrap">
+          @for (v of vehicles; track v.id) {
+            <button
+              (click)="selectVehicle(v)"
+              class="px-3 py-2 rounded-lg text-sm transition-colors"
+              [class]="vehicle?.id === v.id ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+            >
+              <i class="pi pi-car text-xs mr-1"></i> {{ v.brand }} {{ v.model }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (vehicle) {
+        <div class="card p-3 flex items-center gap-3">
+          <i class="pi pi-car text-[var(--color-text-muted)]"></i>
+          <span class="text-sm font-medium">{{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.plate }})</span>
+          <span class="text-xs text-[var(--color-text-muted)]">{{ vehicle.currentKm | number }} km</span>
+        </div>
+      } @else {
+        <div class="card p-4 text-center">
+          <p class="text-sm text-amber-400"><i class="pi pi-exclamation-triangle text-xs mr-1"></i> Primero registra un vehículo en la pestaña Info</p>
+        </div>
+      }
+
+      @if (vehicle) {
+        <div class="flex justify-end">
+          <button (click)="showMaintenanceForm = !showMaintenanceForm" class="btn-primary">
+            <i class="pi pi-plus text-xs"></i> Registrar mantenimiento
+          </button>
+        </div>
+      }
 
       @if (showMaintenanceForm) {
         <div class="card p-4 space-y-3">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label class="label">Tipo</label>
-              <select [(ngModel)]="maintenanceForm.type" class="input">
+              <select [(ngModel)]="maintenanceForm.type" (ngModelChange)="calculateRecommended()" class="input">
                 @for (type of maintenanceTypes; track type) {
                   <option [value]="type">{{ type }}</option>
                 }
@@ -142,27 +195,47 @@
             </div>
             <div>
               <label class="label">Fecha</label>
-              <input type="date" [(ngModel)]="maintenanceForm.date" class="input">
+              <input type="date" [(ngModel)]="maintenanceForm.date" (ngModelChange)="calculateRecommended()" class="input">
             </div>
             <div>
               <label class="label">Kilometraje</label>
-              <input type="number" [(ngModel)]="maintenanceForm.km" class="input" [placeholder]="vehicle?.currentKm || 0">
+              <input type="number" [(ngModel)]="maintenanceForm.km" (ngModelChange)="calculateRecommended()" class="input" [placeholder]="vehicle?.currentKm || 0">
             </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-3">
             <div>
               <label class="label">Costo</label>
               <input type="number" [(ngModel)]="maintenanceForm.cost" class="input" placeholder="0.00">
             </div>
+          </div>
+
+          <!-- Recomendado (auto-calculado) -->
+          @if (maintenanceForm.recommendedNextDate || maintenanceForm.recommendedNextKm) {
+            <div class="bg-[var(--color-surface-hover)] rounded-lg p-3 space-y-1">
+              <p class="text-xs font-medium text-cyan-400"><i class="pi pi-info-circle text-xs mr-1"></i>Recomendado (base de conocimiento)</p>
+              <div class="flex gap-4 text-sm">
+                @if (maintenanceForm.recommendedNextDate) {
+                  <span class="text-[var(--color-text-muted)]">Fecha: <span class="text-[var(--color-text)]">{{ maintenanceForm.recommendedNextDate }}</span></span>
+                }
+                @if (maintenanceForm.recommendedNextKm) {
+                  <span class="text-[var(--color-text-muted)]">Km: <span class="text-[var(--color-text)]">{{ maintenanceForm.recommendedNextKm | number }}</span></span>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Personal (usuario) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="label">Siguiente cambio (fecha)</label>
+              <label class="label">Mi próximo cambio (fecha)</label>
               <input type="date" [(ngModel)]="maintenanceForm.nextDate" class="input">
             </div>
             <div>
-              <label class="label">Siguiente cambio (km)</label>
-              <input type="number" [(ngModel)]="maintenanceForm.nextKm" class="input" placeholder="Ej: 50000">
+              <label class="label">Mi próximo cambio (km)</label>
+              <input type="number" [(ngModel)]="maintenanceForm.nextKm" class="input" placeholder="Opcional">
             </div>
           </div>
+
           <div>
             <label class="label">Notas</label>
             <input type="text" [(ngModel)]="maintenanceForm.notes" class="input" placeholder="Opcional">
@@ -175,8 +248,19 @@
       }
 
       @if (maintenances.length > 0) {
-        <div class="card overflow-hidden">
-          <table class="w-full text-sm">
+        <!-- Filtro por tipo -->
+        <div class="flex items-center gap-3">
+          <label class="text-xs text-[var(--color-text-muted)]">Filtrar:</label>
+          <select [(ngModel)]="filterType" class="input w-auto text-sm">
+            <option value="">Todos</option>
+            @for (type of maintenanceTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="card overflow-x-auto">
+          <table class="w-full text-sm min-w-[650px]">
             <thead>
               <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs uppercase">
                 <th class="text-left p-3">Tipo</th>
@@ -184,18 +268,24 @@
                 <th class="text-right p-3">Km</th>
                 <th class="text-right p-3">Costo</th>
                 <th class="text-left p-3">Notas</th>
-                <th class="text-right p-3">Acciones</th>
+                <th class="text-right p-3 whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              @for (m of maintenances; track m.id) {
+              @for (m of filteredMaintenances; track m.id) {
                 <tr class="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-hover)]">
                   <td class="p-3 font-medium">{{ m.type }}</td>
                   <td class="p-3 text-[var(--color-text-muted)]">{{ m.date }}</td>
                   <td class="p-3 text-right text-[var(--color-text-muted)]">{{ m.km | number }}</td>
                   <td class="p-3 text-right text-red-400 font-medium">{{ formatMoney(m.cost) }}</td>
                   <td class="p-3 text-[var(--color-text-muted)]">{{ m.notes }}</td>
-                  <td class="p-3 text-right">
+                  <td class="p-3 text-right whitespace-nowrap space-x-2">
+                    <button (click)="viewMaintenance = m" class="text-[var(--color-text-muted)] hover:text-cyan-400 transition-colors">
+                      <i class="pi pi-eye text-xs"></i>
+                    </button>
+                    <button (click)="editMaintenance(m)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
+                      <i class="pi pi-pencil text-xs"></i>
+                    </button>
                     <button (click)="deleteMaintenance(m.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
                       <i class="pi pi-trash text-xs"></i>
                     </button>
@@ -231,13 +321,17 @@
                 <p class="text-sm font-medium">{{ m.type }}</p>
                 <p class="text-xs text-[var(--color-text-muted)]">
                   @if (m.nextDate) {
-                    Fecha: {{ m.nextDate }}
+                    Personal: {{ m.nextDate }}
+                  } @else if (m.recommendedNextDate) {
+                    Recomendado: {{ m.recommendedNextDate }}
                   }
-                  @if (m.nextDate && m.nextKm) {
+                  @if ((m.nextDate || m.recommendedNextDate) && (m.nextKm || m.recommendedNextKm)) {
                     &nbsp;|&nbsp;
                   }
                   @if (m.nextKm) {
-                    Km: {{ m.nextKm | number }}
+                    {{ m.nextKm | number }} km
+                  } @else if (m.recommendedNextKm) {
+                    {{ m.recommendedNextKm | number }} km (rec.)
                   }
                 </p>
               </div>
@@ -262,3 +356,63 @@
     </div>
   }
 </div>
+
+<!-- Maintenance detail modal -->
+@if (viewMaintenance) {
+  <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" (click)="viewMaintenance = null">
+    <div class="card p-6 max-w-md w-full space-y-3" (click)="$event.stopPropagation()">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-bold">{{ viewMaintenance.type }}</h3>
+        <button (click)="viewMaintenance = null" class="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-[var(--color-text-muted)]">Fecha:</span>
+          <p>{{ viewMaintenance.date }}</p>
+        </div>
+        <div>
+          <span class="text-[var(--color-text-muted)]">Kilometraje:</span>
+          <p>{{ viewMaintenance.km | number }} km</p>
+        </div>
+        <div>
+          <span class="text-[var(--color-text-muted)]">Costo:</span>
+          <p class="text-red-400 font-medium">{{ formatMoney(viewMaintenance.cost) }}</p>
+        </div>
+      </div>
+      @if (viewMaintenance.nextDate || viewMaintenance.nextKm) {
+        <div class="border-t border-[var(--color-border)] pt-3">
+          <p class="text-xs font-medium text-blue-400 mb-1">Mi próximo cambio</p>
+          <div class="flex gap-4 text-sm">
+            @if (viewMaintenance.nextDate) {
+              <span class="text-[var(--color-text-muted)]">Fecha: <span class="text-[var(--color-text)]">{{ viewMaintenance.nextDate }}</span></span>
+            }
+            @if (viewMaintenance.nextKm) {
+              <span class="text-[var(--color-text-muted)]">Km: <span class="text-[var(--color-text)]">{{ viewMaintenance.nextKm | number }}</span></span>
+            }
+          </div>
+        </div>
+      }
+      @if (viewMaintenance.recommendedNextDate || viewMaintenance.recommendedNextKm) {
+        <div class="border-t border-[var(--color-border)] pt-3">
+          <p class="text-xs font-medium text-cyan-400 mb-1">Recomendado</p>
+          <div class="flex gap-4 text-sm">
+            @if (viewMaintenance.recommendedNextDate) {
+              <span class="text-[var(--color-text-muted)]">Fecha: <span class="text-[var(--color-text)]">{{ viewMaintenance.recommendedNextDate }}</span></span>
+            }
+            @if (viewMaintenance.recommendedNextKm) {
+              <span class="text-[var(--color-text-muted)]">Km: <span class="text-[var(--color-text)]">{{ viewMaintenance.recommendedNextKm | number }}</span></span>
+            }
+          </div>
+        </div>
+      }
+      @if (viewMaintenance.notes) {
+        <div>
+          <span class="text-sm text-[var(--color-text-muted)]">Notas:</span>
+          <p class="text-sm mt-1 whitespace-pre-wrap bg-[var(--color-surface-hover)] p-3 rounded-lg">{{ viewMaintenance.notes }}</p>
+        </div>
+      }
+    </div>
+  </div>
+}
