@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
-import { db, Vehicle, Maintenance } from '../../core/database/db';
+import { db, Vehicle, Maintenance, FuelLog } from '../../core/database/db';
 import { formatMoney } from '../../core/config';
 
 @Component({
@@ -23,6 +23,14 @@ export class VehicleComponent implements OnInit {
   editingMaintenanceId: number | null = null;
   viewMaintenance: Maintenance | null = null;
   filterType = '';
+  // Fuel
+  fuelLogs: FuelLog[] = [];
+  showFuelForm = false;
+  editingFuelId: number | null = null;
+  fuelForm: FuelLog = { vehicleId: 0, date: '', km: 0, liters: 0, cost: 0, fullTank: true, notes: '' };
+  fuelMonthlyTotal = 0;
+  fuelAvgConsumption = 0;
+  fuelMonthlyKm = 0;
   showKmUpdate = false;
   newKm = 0;
 
@@ -74,6 +82,10 @@ export class VehicleComponent implements OnInit {
     this.maintenances = [];
     this.upcomingMaintenances = [];
     this.totalCost = 0;
+    this.fuelLogs = [];
+    this.fuelMonthlyTotal = 0;
+    this.fuelAvgConsumption = 0;
+    this.fuelMonthlyKm = 0;
 
     if (!this.vehicle) return;
 
@@ -93,6 +105,15 @@ export class VehicleComponent implements OnInit {
       }
     }
     this.upcomingMaintenances = Array.from(latestByType.values());
+
+    // Fuel
+    this.fuelLogs = await db.fuelLogs
+      .where('vehicleId')
+      .equals(this.vehicle.id!)
+      .reverse()
+      .sortBy('date');
+    this.fuelLogs.reverse();
+    this.calculateFuelStats();
   }
 
   get filteredMaintenances(): Maintenance[] {
@@ -223,5 +244,74 @@ export class VehicleComponent implements OnInit {
     if (nextDate && nextDate <= in30Days) return true;
     if (nextKm && this.vehicle && (nextKm - this.vehicle.currentKm) <= 1000) return true;
     return false;
+  }
+
+  // === FUEL ===
+  calculateFuelStats() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const thisMonth = this.fuelLogs.filter(f => {
+      const d = new Date(f.date);
+      return d.getMonth() + 1 === month && d.getFullYear() === year;
+    });
+
+    this.fuelMonthlyTotal = thisMonth.reduce((sum, f) => sum + f.cost, 0);
+
+    // Km recorridos este mes
+    if (thisMonth.length >= 2) {
+      const kms = thisMonth.map(f => f.km);
+      this.fuelMonthlyKm = Math.max(...kms) - Math.min(...kms);
+    } else {
+      this.fuelMonthlyKm = 0;
+    }
+
+    // Consumo promedio (km/litro) - solo con tanques llenos consecutivos
+    const fullTanks = this.fuelLogs.filter(f => f.fullTank).sort((a, b) => a.km - b.km);
+    if (fullTanks.length >= 2) {
+      let totalKm = 0;
+      let totalLiters = 0;
+      for (let i = 1; i < fullTanks.length; i++) {
+        totalKm += fullTanks[i].km - fullTanks[i - 1].km;
+        totalLiters += fullTanks[i].liters;
+      }
+      this.fuelAvgConsumption = totalLiters > 0 ? Math.round((totalKm / totalLiters) * 10) / 10 : 0;
+    } else {
+      this.fuelAvgConsumption = 0;
+    }
+  }
+
+  async saveFuel() {
+    if (!this.vehicle || !this.fuelForm.date || !this.fuelForm.liters || !this.fuelForm.cost) return;
+    this.fuelForm.vehicleId = this.vehicle.id!;
+    if (this.editingFuelId) {
+      await db.fuelLogs.update(this.editingFuelId, { ...this.fuelForm });
+    } else {
+      await db.fuelLogs.add({ ...this.fuelForm });
+    }
+    // Update vehicle km if fuel km is higher
+    if (this.fuelForm.km > this.vehicle.currentKm) {
+      await db.vehicles.update(this.vehicle.id!, { currentKm: this.fuelForm.km });
+    }
+    this.cancelFuel();
+    await this.load();
+  }
+
+  editFuel(f: FuelLog) {
+    this.fuelForm = { vehicleId: f.vehicleId, date: f.date, km: f.km, liters: f.liters, cost: f.cost, fullTank: f.fullTank, notes: f.notes };
+    this.editingFuelId = f.id!;
+    this.showFuelForm = true;
+  }
+
+  async deleteFuel(id: number) {
+    await db.fuelLogs.delete(id);
+    await this.load();
+  }
+
+  cancelFuel() {
+    this.fuelForm = { vehicleId: 0, date: '', km: 0, liters: 0, cost: 0, fullTank: true, notes: '' };
+    this.editingFuelId = null;
+    this.showFuelForm = false;
   }
 }

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { BackupService } from '../core/backup/backup.service';
+import { AuthService } from '../core/auth/auth.service';
 
 interface NavItem {
   path: string;
@@ -47,7 +48,10 @@ interface NavItem {
 })
 export class LayoutComponent {
   private backupService = inject(BackupService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
   menuOpen = false;
+  userName = this.authService.getUser()?.displayName || '';
 
   navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: 'pi-home' },
@@ -80,5 +84,10 @@ export class LayoutComponent {
     if (!confirm('¿Realmente seguro? Último aviso.')) return;
     await this.backupService.clearAll();
     window.location.reload();
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

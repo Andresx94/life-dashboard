@@ -1,0 +1,40 @@
+<div class="min-h-screen flex items-center justify-center bg-[var(--color-bg)] p-4">
+  <div class="card p-8 w-full max-w-sm space-y-6">
+    <div class="text-center">
+      <h1 class="text-2xl font-bold">Life Dashboard</h1>
+      <p class="text-sm text-[var(--color-text-muted)] mt-1">Inicia sesión para continuar</p>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="label">Usuario</label>
+        <input
+          type="text"
+          [(ngModel)]="username"
+          class="input"
+          placeholder="Usuario"
+          (keydown.enter)="login()"
+          autofocus
+        >
+      </div>
+      <div>
+        <label class="label">Contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          class="input"
+          placeholder="Contraseña"
+          (keydown.enter)="login()"
+        >
+      </div>
+
+      @if (error) {
+        <p class="text-xs text-red-400 text-center">Usuario o contraseña incorrectos</p>
+      }
+
+      <button (click)="login()" class="btn-primary w-full">
+        Entrar
+      </button>
+    </div>
+  </div>
+</div>

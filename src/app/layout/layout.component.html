@@ -28,6 +28,7 @@
 
     <!-- Right actions -->
     <div class="flex items-center gap-1 ml-auto">
+      <span class="text-xs text-[var(--color-text-muted)] hidden sm:inline mr-2">{{ userName }}</span>
       <button class="nav-link" (click)="exportBackup()" title="Descargar backup">
         <i class="pi pi-download"></i>
       </button>
@@ -36,6 +37,9 @@
       </button>
       <button class="nav-link" (click)="clearAll()" title="Limpiar todo">
         <i class="pi pi-trash"></i>
+      </button>
+      <button class="nav-link" (click)="logout()" title="Cerrar sesión">
+        <i class="pi pi-sign-out"></i>
       </button>
       <input #fileInput type="file" accept=".json" (change)="importBackup($event)" class="hidden">
     </div>

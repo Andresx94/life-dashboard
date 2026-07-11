@@ -36,6 +36,16 @@
         <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]"></span>
       }
     </button>
+    <button
+      (click)="activeTab = 'fuel'"
+      class="px-4 py-2 text-sm transition-colors relative"
+      [class]="activeTab === 'fuel' ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+    >
+      <i class="pi pi-bolt mr-2 text-xs"></i>Combustible
+      @if (activeTab === 'fuel') {
+        <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]"></span>
+      }
+    </button>
   </div>
 
   <!-- INFO TAB -->
@@ -356,6 +366,140 @@
     </div>
   }
 </div>
+
+<!-- FUEL TAB -->
+@if (activeTab === 'fuel') {
+  <div class="max-w-6xl space-y-4">
+    <!-- Vehicle selector -->
+    @if (vehicles.length > 1) {
+      <div class="flex gap-2 flex-wrap">
+        @for (v of vehicles; track v.id) {
+          <button
+            (click)="selectVehicle(v)"
+            class="px-3 py-2 rounded-lg text-sm transition-colors"
+            [class]="vehicle?.id === v.id ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'"
+          >
+            <i class="pi pi-car text-xs mr-1"></i> {{ v.brand }} {{ v.model }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (vehicle) {
+      <!-- Summary -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="card p-3">
+          <p class="text-xs text-[var(--color-text-muted)]">Gasto este mes</p>
+          <p class="text-lg font-bold text-red-400">{{ formatMoney(fuelMonthlyTotal) }}</p>
+        </div>
+        <div class="card p-3">
+          <p class="text-xs text-[var(--color-text-muted)]">Consumo promedio</p>
+          <p class="text-lg font-bold text-[var(--color-text)]">{{ fuelAvgConsumption }} km/l</p>
+        </div>
+        <div class="card p-3">
+          <p class="text-xs text-[var(--color-text-muted)]">Km este mes</p>
+          <p class="text-lg font-bold text-[var(--color-text)]">{{ fuelMonthlyKm | number }}</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button (click)="showFuelForm = !showFuelForm" class="btn-primary">
+          <i class="pi pi-plus text-xs"></i> Registrar carga
+        </button>
+      </div>
+
+      @if (showFuelForm) {
+        <div class="card p-4 space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="label">Fecha</label>
+              <input type="date" [(ngModel)]="fuelForm.date" class="input">
+            </div>
+            <div>
+              <label class="label">Kilometraje</label>
+              <input type="number" [(ngModel)]="fuelForm.km" class="input" [placeholder]="vehicle.currentKm || 0">
+            </div>
+            <div>
+              <label class="label">Litros</label>
+              <input type="number" [(ngModel)]="fuelForm.liters" class="input" placeholder="0.00" step="0.01">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="label">Costo total</label>
+              <input type="number" [(ngModel)]="fuelForm.cost" class="input" placeholder="0.00">
+            </div>
+            <div class="flex items-end">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="fuelForm.fullTank" class="w-4 h-4 rounded">
+                <span class="text-sm">Tanque lleno</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label class="label">Notas</label>
+            <input type="text" [(ngModel)]="fuelForm.notes" class="input" placeholder="Opcional">
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button (click)="cancelFuel()" class="btn-secondary">Cancelar</button>
+            <button (click)="saveFuel()" class="btn-primary">Guardar</button>
+          </div>
+        </div>
+      }
+
+      @if (fuelLogs.length > 0) {
+        <div class="card overflow-x-auto">
+          <table class="w-full text-sm min-w-[600px]">
+            <thead>
+              <tr class="border-b border-[var(--color-border)] text-[var(--color-text-muted)] text-xs uppercase">
+                <th class="text-left p-3">Fecha</th>
+                <th class="text-right p-3">Km</th>
+                <th class="text-right p-3">Litros</th>
+                <th class="text-right p-3">Costo</th>
+                <th class="text-center p-3">Lleno</th>
+                <th class="text-right p-3 whitespace-nowrap">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of fuelLogs; track f.id) {
+                <tr class="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-hover)]">
+                  <td class="p-3">{{ f.date }}</td>
+                  <td class="p-3 text-right text-[var(--color-text-muted)]">{{ f.km | number }}</td>
+                  <td class="p-3 text-right">{{ f.liters }}</td>
+                  <td class="p-3 text-right text-red-400 font-medium">{{ formatMoney(f.cost) }}</td>
+                  <td class="p-3 text-center">
+                    @if (f.fullTank) {
+                      <i class="pi pi-check-circle text-emerald-400 text-xs"></i>
+                    } @else {
+                      <i class="pi pi-minus-circle text-[var(--color-text-muted)] text-xs"></i>
+                    }
+                  </td>
+                  <td class="p-3 text-right whitespace-nowrap space-x-2">
+                    <button (click)="editFuel(f)" class="text-[var(--color-text-muted)] hover:text-blue-400 transition-colors">
+                      <i class="pi pi-pencil text-xs"></i>
+                    </button>
+                    <button (click)="deleteFuel(f.id!)" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors">
+                      <i class="pi pi-trash text-xs"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="card p-8 text-center">
+          <i class="pi pi-bolt text-2xl text-[var(--color-text-muted)] opacity-50"></i>
+          <p class="text-sm text-[var(--color-text-muted)] mt-2">No hay cargas registradas</p>
+        </div>
+      }
+    } @else {
+      <div class="card p-4 text-center">
+        <p class="text-sm text-amber-400"><i class="pi pi-exclamation-triangle text-xs mr-1"></i> Primero registra un vehículo en la pestaña Info</p>
+      </div>
+    }
+  </div>
+}
 
 <!-- Maintenance detail modal -->
 @if (viewMaintenance) {

@@ -119,6 +119,17 @@ export interface Reminder {
   completed: boolean;
 }
 
+export interface FuelLog {
+  id?: number;
+  vehicleId: number;
+  date: string;
+  km: number;
+  liters: number;
+  cost: number;
+  fullTank: boolean;
+  notes: string;
+}
+
 class AppDatabase extends Dexie {
   salaries!: Table<Salary>;
   saasClients!: Table<SaasClient>;
@@ -131,12 +142,13 @@ class AppDatabase extends Dexie {
   contacts!: Table<Contact>;
   vehicles!: Table<Vehicle>;
   maintenances!: Table<Maintenance>;
+  fuelLogs!: Table<FuelLog>;
   reminders!: Table<Reminder>;
 
-  constructor() {
-    super('LifeDashboard');
+  constructor(name: string) {
+    super(name);
 
-    this.version(3).stores({
+    this.version(4).stores({
       salaries: '++id, company, date',
       saasClients: '++id, name, status',
       saasPayments: '++id, clientId, [month+year], status',
@@ -148,9 +160,15 @@ class AppDatabase extends Dexie {
       contacts: '++id, name, company',
       vehicles: '++id',
       maintenances: '++id, vehicleId, type, date',
+      fuelLogs: '++id, vehicleId, date',
       reminders: '++id, module, date, completed',
     });
   }
 }
 
-export const db = new AppDatabase();
+function getDbName(): string {
+  const user = localStorage.getItem('ld_user');
+  return user ? `LifeDashboard_${user}` : 'LifeDashboard';
+}
+
+export const db = new AppDatabase(getDbName());
