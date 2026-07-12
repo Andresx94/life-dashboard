@@ -20,6 +20,7 @@ interface SimpleContact {
 export class ContactsComponent implements OnInit {
   contacts: SimpleContact[] = [];
   filtered: SimpleContact[] = [];
+  loading = true;
   showForm = false;
   editingId: number | null = null;
   searchQuery = '';
@@ -35,8 +36,10 @@ export class ContactsComponent implements OnInit {
   }
 
   async load() {
+    this.loading = true;
     this.contacts = await db.contacts.orderBy('name').toArray() as unknown as SimpleContact[];
     this.filter();
+    this.loading = false;
   }
 
   filter() {
@@ -57,12 +60,35 @@ export class ContactsComponent implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (side === 'front') this.form.photoFront = reader.result as string;
-      else this.form.photoBack = reader.result as string;
-    };
-    reader.readAsDataURL(file);
+    this.compressImage(file, 800, 0.7).then(compressed => {
+      if (side === 'front') this.form.photoFront = compressed;
+      else this.form.photoBack = compressed;
+    });
+  }
+
+  private compressImage(file: File, maxWidth: number, quality: number): Promise<string> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width;
+          let h = img.height;
+          if (w > maxWidth) {
+            h = Math.round((h * maxWidth) / w);
+            w = maxWidth;
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target!.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   edit(contact: SimpleContact) {

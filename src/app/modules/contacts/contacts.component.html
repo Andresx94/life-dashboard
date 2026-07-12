@@ -60,7 +60,12 @@
   }
 
   <!-- Cards -->
-  @if (filtered.length > 0) {
+  @if (loading) {
+    <div class="card p-8 text-center">
+      <i class="pi pi-spin pi-spinner text-2xl text-[var(--color-accent)]"></i>
+      <p class="text-sm text-[var(--color-text-muted)] mt-2">Cargando tarjetas...</p>
+    </div>
+  } @else if (filtered.length > 0) {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       @for (c of filtered; track c.id) {
         <div class="card p-4 space-y-3 hover:border-[#3b3b3b] transition-colors">
